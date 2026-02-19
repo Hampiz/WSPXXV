@@ -1,0 +1,55 @@
+h2 Lägg till en vara i din inköpslista
+
+form action="/grocerylist" method="post" class="add-form"
+  input type="text" name="new_grocery" placeholder="Ny vara"
+  input type="text" name="description" placeholder="Beskrivning"
+  input type="text" name="store" placeholder="Butik"
+  button type="submit" Lägg till
+
+h3 Din inköpslista
+hr
+
+table
+  thead
+    tr
+      th Namn
+      th Beskrivning
+      th Butik
+      th Status
+      th Åtgärder
+  tbody
+    - if @grocerylist && !@grocerylist.empty?
+      - @grocerylist.each do |item|
+        - if params[:edit_id] && params[:edit_id].to_i == item['id']
+          tr
+            td colspan="5"
+              form action="/grocerylist/#{item['id']}/update" method="post"
+                input type="text" name="name" value=item['name']
+                input type="text" name="description" value=item['description']
+                input type="text" name="store" value=item['store']
+                button type="submit" Spara
+                button type="button" onclick="location.href='/grocerylist'" style="margin-left:8px;" Avbryt
+        - else
+          tr
+            td= item['name']
+            td= item['description']
+            td= item['store']
+            - if item['state'] && item['state'].to_i == 1
+              td Klar
+            - else
+              td Ej klar
+            td
+              form method="post" action="/grocerylist/#{item['id']}/delete" style="display:inline;"
+                button type="submit" Ta bort
+              - if item['state'] && item['state'].to_i == 1
+                form method="post" action="/grocerylist/#{item['id']}/undone" style="display:inline; margin-left:6px;"
+                  button type="submit" Ångra
+              - else
+                form method="post" action="/grocerylist/#{item['id']}/done" style="display:inline; margin-left:6px;"
+                  button type="submit" Klar
+              form action="/grocerylist" method="get" style="display:inline"
+                input type="hidden" name="edit_id" value=item['id']
+                button type="submit" Ändra
+    - else
+      tr
+        td colspan="5" Inga varor hittades. Lägg till en ny vara ovan.
