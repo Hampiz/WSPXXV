@@ -9,9 +9,13 @@ html
     nav.navbar
       h1 Grocerylist Boss🦁
       ul.nav-links
-        li
-          a href="/register" Registrera dig här!🔎
-        li 
-          a href="/login" Har redan ett konto? Logga in här!🔒
+        - if @current_user
+          li
+            a href="/logout" Logga ut
+        - else
+          li
+            a href="/login" Har redan ett konto? Logga in här!
+          li
+            a href="/register" Har inget konto? Registrera dig här!
     main
       == yield

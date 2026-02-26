@@ -12,10 +12,10 @@ hr
 table
   thead
     tr
-      th Namn
-      th Beskrivning
-      th Butik
-      th Status
+      th Namn |
+      th Beskrivning | 
+      th Butik | 
+      th Status | 
       th Åtgärder
   tbody
     - if @grocerylist && !@grocerylist.empty?
@@ -50,6 +50,3 @@ table
               form action="/grocerylist" method="get" style="display:inline"
                 input type="hidden" name="edit_id" value=item['id']
                 button type="submit" Ändra
-    - else
-      tr
-        td colspan="5" Inga varor hittades. Lägg till en ny vara ovan.
