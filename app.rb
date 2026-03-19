@@ -66,11 +66,6 @@ post('/register') do
   pwd = params["pwd"]
   pwd_confirm = params["pwd_confirm"]
 
-  if pwd.length < 3
-    @error = 'Lösenordet måste vara minst 3 tecken'
-    return slim(:register)
-  end
-
   db = SQLite3::Database.new("db/grocerylist.db")
   result = db.execute("SELECT id FROM users WHERE username=?", username)
 
@@ -78,7 +73,8 @@ post('/register') do
     if pwd == pwd_confirm
       pwd_digest = BCrypt::Password.create(pwd)
       db.execute("INSERT INTO users(username, password_hash) VALUES(?,?)", [username, pwd_digest])
-      redirect('/login')
+      session[:user_id] = db.last_insert_row_id
+      redirect('/grocerylist')
     else
       @error = 'Lösenorden matchar inte'
       slim(:register)

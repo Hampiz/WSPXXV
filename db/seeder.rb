@@ -15,16 +15,15 @@ def seed!(db)
 end
 
 def drop_tables(db)
-  db.execute('DROP TABLE IF EXISTS user')
+  db.execute('DROP TABLE IF EXISTS users')
   db.execute('DROP TABLE IF EXISTS grocerylist')
 end
 
 def create_tables(db)
-  db.execute('CREATE TABLE user (
+  db.execute('CREATE TABLE users (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT NOT NULL, 
-              name TEXT NOT NULL,
-              pwd_digest TEXT NOT NULL)')
+              username TEXT UNIQUE NOT NULL,
+              password_hash TEXT NOT NULL)')
               
   db.execute('CREATE TABLE grocerylist (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,12 +37,11 @@ def populate_tables(db)
   db.execute('INSERT INTO grocerylist (name, description, store, state) VALUES ("Mjölk", "3 liter mellanmjölk, eko", "ICA", 0)')
   db.execute('INSERT INTO grocerylist (name, description, store, state) VALUES ("Bröd", "Vete bröd", "Systembolaget", 0)')
   db.execute('INSERT INTO grocerylist (name, description, store, state) VALUES ("Smör", "Levererad smör", "Coop", 0)')
+
+  # example user (password: sekret123)
+  require 'bcrypt'
+  pw = BCrypt::Password.create('sekret123')
+  db.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', ['demo', pw.to_s])
 end
 
-
 seed!(db)
-
-
-
-
-
