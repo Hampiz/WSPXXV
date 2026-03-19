@@ -1,0 +1,8 @@
+h3 Registrera nytt konto
+- if @error
+  p style="color: red;" = @error
+form action="/register" method="post"
+    input type="text" name="username" placeholder="Användarnamn"
+    input type="password" name="pwd" placeholder="Lösenord"
+    input type="password" name="pwd_confirm" placeholder="Bekräfta lösenord"
+    input type="submit" value="Registrera"

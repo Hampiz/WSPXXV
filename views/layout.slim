@@ -7,15 +7,17 @@ html
     link rel="stylesheet" href="/design.css"
   body
     nav.navbar
-      h1 Grocerylist Boss🦁
+      h1 Makeyourgrocerylist
       ul.nav-links
-        - if @current_user
+        - if logged_in?
+          li Hej, #{current_user['username']}!
           li
-            a href="/logout" Logga ut
+            form action="/logout" method="post" style="display:inline;"
+              button type="submit" Logga ut
         - else
           li
-            a href="/login" Har redan ett konto? Logga in här!
+            a href="/login" Logga in
           li
-            a href="/register" Har inget konto? Registrera dig här!
+            a href="/register" Skapa ett konto
     main
       == yield

@@ -15,10 +15,17 @@ def seed!(db)
 end
 
 def drop_tables(db)
+  db.execute('DROP TABLE IF EXISTS user')
   db.execute('DROP TABLE IF EXISTS grocerylist')
 end
 
 def create_tables(db)
+  db.execute('CREATE TABLE user (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL, 
+              name TEXT NOT NULL,
+              pwd_digest TEXT NOT NULL)')
+              
   db.execute('CREATE TABLE grocerylist (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               name TEXT NOT NULL, 

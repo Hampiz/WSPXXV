@@ -4,8 +4,94 @@ require 'sqlite3'
 require 'sinatra/reloader'
 require 'bcrypt'
 
-get('/') do
+enable :sessions
+
+helpers do
+  def current_user
+    return nil unless session[:user_id]
+    db = SQLite3::Database.new('db/grocerylist.db')
+    db.results_as_hash = true
+    user = db.get_first_row('SELECT * FROM users WHERE id = ?', session[:user_id])
+    user
+  end
+
+  def logged_in?
+    !!current_user
+  end
+end
+
+before '/grocerylist*' do
+  unless logged_in?
+    redirect('/login')
+  end
+end
+
+get('/') do  
     slim(:index)
+end
+
+get('/login') do
+  slim(:login)
+end
+
+get('/register') do
+  slim(:register)
+end
+
+post('/login') do
+  username = params["username"]
+  pwd = params["pwd"]
+  db = SQLite3::Database.new("db/grocerylist.db")
+  db.results_as_hash = true
+  result=db.execute("SELECT id,password_hash FROM users WHERE username=?", username)
+  if result.empty?
+    @error = 'Invalid username or password'
+    slim(:login)
+  else
+    user_id = result.first["id"]
+    pwd_digest = result.first["password_hash"]
+    if BCrypt::Password.new(pwd_digest) == pwd
+      session[:user_id] = user_id
+      redirect('/grocerylist')
+    else
+      @error = 'Invalid username or password'
+      slim(:login)
+    end
+  end
+end
+
+
+post('/register') do
+  username = params["username"]
+  pwd = params["pwd"]
+  pwd_confirm = params["pwd_confirm"]
+
+  if pwd.length < 3
+    @error = 'Lösenordet måste vara minst 3 tecken'
+    return slim(:register)
+  end
+
+  db = SQLite3::Database.new("db/grocerylist.db")
+  result = db.execute("SELECT id FROM users WHERE username=?", username)
+
+  if result.empty?
+    if pwd == pwd_confirm
+      pwd_digest = BCrypt::Password.create(pwd)
+      db.execute("INSERT INTO users(username, password_hash) VALUES(?,?)", [username, pwd_digest])
+      redirect('/login')
+    else
+      @error = 'Lösenorden matchar inte'
+      slim(:register)
+    end
+  else
+    @error = 'Användarnamnet är redan taget'
+    slim(:register)
+  end
+end
+
+post('/logout') do
+  session.clear
+  redirect('/')
 end
 
 get('/grocerylist') do

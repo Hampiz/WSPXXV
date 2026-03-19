@@ -1,0 +1,7 @@
+h3 Logga in 
+- if @error
+  p style="color: red;" = @error
+form action="/login" method="post" 
+    input type="text" name="username" placeholder="Användarnamn"
+    input type="password" name="pwd" placeholder="Lösenord"
+    input type="submit" value="Logga in"
