@@ -1,4 +1,16 @@
-h2 Lägg till en vara i din inköpslista
+h2 Skapa Inköpslista
+- if params[:message] == 'created'
+  p style="color: green;" Ny lista skapad.
+- elsif params[:message] == 'done'
+  p style="color: green;" Den aktiva listan markerades som klar.
+
+form action="/list/new" method="post" class="add-form"
+  input type="text" name="list_name" placeholder="Namn"
+  button type="submit" Skapa ny lista
+
+br
+
+h3 Lägg till en vara i din inköpslista
 
 form action="/grocerylist" method="post" class="add-form"
   input type="text" name="new_grocery" placeholder="Ny vara"
@@ -6,7 +18,9 @@ form action="/grocerylist" method="post" class="add-form"
   input type="text" name="store" placeholder="Butik"
   button type="submit" Lägg till
 
-h3 Din inköpslista
+br
+
+h3 Inköpslista: #{@current_list ? @current_list['name'] : 'Ny lista'}
 hr
 
 table
@@ -52,3 +66,20 @@ table
               form action="/grocerylist" method="get" style="display:inline"
                 input type="hidden" name="edit_id" value=item['id']
                 button type="submit" Ändra
+
+form action="/list/done" method="post" style="margin-top: 16px;"
+  button type="submit" Markera lista som klar
+
+  h3 Klara listor
+  hr
+  - if @done_lists && !@done_lists.empty?
+    - @done_lists.each do |done_list|
+      div.list-done
+        h4= done_list['name']
+        p Skapad: #{done_list['created_at']}
+        form action="/grocerylist/#{done_list['id']}" method="get"
+          button type="submit" Visa innehåll
+        form method="post" action="/grocerylist/#{done_list['id']}/delete" style="display:inline;"
+          button type="submit" Ta bort
+  - else
+    p Inga klara listor än.

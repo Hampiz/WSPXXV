@@ -25,22 +25,28 @@ def create_tables(db)
               username TEXT UNIQUE NOT NULL,
               password_hash TEXT NOT NULL)')
               
-  db.execute('CREATE TABLE grocerylist (
+  db.execute('CREATE TABLE lists (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               user_id INTEGER NOT NULL,
+              name TEXT NOT NULL,
+              state BOOLEAN DEFAULT 0,
+              created_at TEXT NOT NULL,
+              FOREIGN KEY(user_id) REFERENCES users(id))')
+
+  db.execute('CREATE TABLE grocerylist (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              list_id INTEGER NOT NULL,
               name TEXT NOT NULL,
               description TEXT,
               store TEXT,
               state BOOLEAN DEFAULT 0,
               created_at TEXT NOT NULL,
-              FOREIGN KEY(user_id) REFERENCES users(id))')
+              FOREIGN KEY(list_id) REFERENCES lists(id))')
 end
 
 def populate_tables(db)
   now = Time.now.strftime('%Y-%m-%d')
 
-  # no demo account; start with empty lists until users register and add items
-  # sample data can be added by users through the app interface.
 end
 
 seed!(db)
