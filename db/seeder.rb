@@ -27,21 +27,20 @@ def create_tables(db)
               
   db.execute('CREATE TABLE grocerylist (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
-              name TEXT NOT NULL, 
+              user_id INTEGER NOT NULL,
+              name TEXT NOT NULL,
               description TEXT,
               store TEXT,
-              state BOOLEAN)')
+              state BOOLEAN DEFAULT 0,
+              created_at TEXT NOT NULL,
+              FOREIGN KEY(user_id) REFERENCES users(id))')
 end
 
 def populate_tables(db)
-  db.execute('INSERT INTO grocerylist (name, description, store, state) VALUES ("Mjölk", "3 liter mellanmjölk, eko", "ICA", 0)')
-  db.execute('INSERT INTO grocerylist (name, description, store, state) VALUES ("Bröd", "Vete bröd", "Systembolaget", 0)')
-  db.execute('INSERT INTO grocerylist (name, description, store, state) VALUES ("Smör", "Levererad smör", "Coop", 0)')
+  now = Time.now.strftime('%Y-%m-%d')
 
-  # example user (password: sekret123)
-  require 'bcrypt'
-  pw = BCrypt::Password.create('sekret123')
-  db.execute('INSERT INTO users (username, password_hash) VALUES (?, ?)', ['demo', pw.to_s])
+  # no demo account; start with empty lists until users register and add items
+  # sample data can be added by users through the app interface.
 end
 
 seed!(db)

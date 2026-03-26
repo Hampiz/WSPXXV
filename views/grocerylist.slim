@@ -15,6 +15,7 @@ table
       th Namn |
       th Beskrivning | 
       th Butik | 
+      th Tillagd | 
       th Status | 
       th Åtgärder
   tbody
@@ -34,6 +35,7 @@ table
             td= item['name']
             td= item['description']
             td= item['store']
+            td= item['created_at']
             - if item['state'] && item['state'].to_i == 1
               td Klar
             - else

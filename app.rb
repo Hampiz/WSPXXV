@@ -95,10 +95,10 @@ get('/grocerylist') do
     db = SQLite3::Database.new('db/grocerylist.db')
     edit_id = params[:edit_id]
     db.results_as_hash = true
-    if query && !query.empty?
-        @grocerylist = db.execute("SELECT * FROM grocerylist WHERE name LIKE ?", "%#{query}%")
-    else
-        @grocerylist = db.execute('SELECT * FROM grocerylist')
+  if query && !query.empty?
+    @grocerylist = db.execute("SELECT * FROM grocerylist WHERE user_id = ? AND name LIKE ?", [current_user['id'], "%#{query}%"])
+  else
+    @grocerylist = db.execute('SELECT * FROM grocerylist WHERE user_id = ?', [current_user['id']])
     end
     slim(:grocerylist)
 end
@@ -108,7 +108,8 @@ post('/grocerylist') do
     description = params[:description]
     store = params[:store]
     db = SQLite3::Database.new('db/grocerylist.db')
-    db.execute('INSERT INTO grocerylist (name, description, store) VALUES (?, ?, ?)', [new_grocery, description, store])
+  created_at = Time.now.strftime('%Y-%m-%d')
+  db.execute('INSERT INTO grocerylist (user_id, name, description, store, state, created_at) VALUES (?, ?, ?, ?, ?, ?)', [current_user['id'], new_grocery, description, store, 0, created_at])
     redirect('/grocerylist')
 end
 
@@ -120,7 +121,7 @@ post('/grocerylist/:id/update') do
     store = params[:store]
     # koppla till databasen
     db = SQLite3::Database.new('db/grocerylist.db')
-    db.execute('UPDATE grocerylist SET name = ?, description = ?, store = ? WHERE id = ?', [name, description, store, id])
+    db.execute('UPDATE grocerylist SET name = ?, description = ?, store = ? WHERE id = ? AND user_id = ?', [name, description, store, id, current_user['id']])
     # slutligen, redirect till grocerylist sidan
     redirect('/grocerylist')
 end
@@ -130,14 +131,14 @@ post('/grocerylist/:id/delete') do
     id = params[:id].to_i
     #koppla till databasen
     db = SQLite3::Database.new("db/grocerylist.db")
-    db.execute("DELETE FROM grocerylist WHERE id = ?", id)
+    db.execute("DELETE FROM grocerylist WHERE id = ? AND user_id = ?", [id, current_user['id']])
     redirect('/grocerylist')
 end
 
 post('/grocerylist/:id/done') do
     id = params[:id].to_i
     db = SQLite3::Database.new("db/grocerylist.db")
-    db.execute("UPDATE grocerylist SET state = 1 WHERE id = ?", id)
+    db.execute("UPDATE grocerylist SET state = 1 WHERE id = ? AND user_id = ?", [id, current_user['id']])
     redirect('/grocerylist')
     end
 
@@ -145,6 +146,6 @@ post('/grocerylist/:id/done') do
 post('/grocerylist/:id/undone') do
     id = params[:id].to_i
     db = SQLite3::Database.new("db/grocerylist.db")
-    db.execute("UPDATE grocerylist SET state = 0 WHERE id = ?", id)
+    db.execute("UPDATE grocerylist SET state = 0 WHERE id = ? AND user_id = ?", [id, current_user['id']])
     redirect('/grocerylist')
 end
