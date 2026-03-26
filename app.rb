@@ -19,13 +19,7 @@ helpers do
     return nil unless logged_in?
     db = SQLite3::Database.new('db/grocerylist.db')
     db.results_as_hash = true
-    list = db.get_first_row('SELECT * FROM lists WHERE user_id = ? AND state = 0 ORDER BY id DESC LIMIT 1', current_user['id'])
-    unless list
-      now = Time.now.strftime('%Y-%m-%d')
-      db.execute('INSERT INTO lists (user_id, name, state, created_at) VALUES (?, ?, 0, ?)', [current_user['id'], 'Min inköpslista', now])
-      list = db.get_first_row('SELECT * FROM lists WHERE id = ?', db.last_insert_row_id)
-    end
-    list
+    db.get_first_row('SELECT * FROM lists WHERE user_id = ? AND state = 0 ORDER BY id DESC LIMIT 1', current_user['id'])
   end
 
   def logged_in?
@@ -104,18 +98,28 @@ post('/logout') do
 end
 
 get('/grocerylist') do
-    query = params['q']
-    db = SQLite3::Database.new('db/grocerylist.db')
-    edit_id = params[:edit_id]
-    db.results_as_hash = true
-    @current_list = current_list
-    @done_lists = db.execute('SELECT * FROM lists WHERE user_id = ? AND state = 1 ORDER BY id DESC', [current_user['id']])
-  if query && !query.empty?
-        @grocerylist = db.execute("SELECT * FROM grocerylist WHERE list_id = ? AND name LIKE ?", [@current_list['id'], "%#{query}%"])
-  else
-        @grocerylist = db.execute('SELECT * FROM grocerylist WHERE list_id = ?', [@current_list['id']])
+  query = params['q']
+  db = SQLite3::Database.new('db/grocerylist.db')
+  db.results_as_hash = true
+  @current_list = current_list
+  @done_lists = db.execute('SELECT * FROM lists WHERE user_id = ? AND state = 1 ORDER BY id DESC', [current_user['id']])
+  if @current_list
+    if query && !query.empty?
+      @grocerylist = db.execute("SELECT * FROM grocerylist WHERE list_id = ? AND name LIKE ?", [@current_list['id'], "%#{query}%"])
+    else
+      @grocerylist = db.execute('SELECT * FROM grocerylist WHERE list_id = ?', [@current_list['id']])
     end
-    slim(:grocerylist)
+  else
+    @grocerylist = []
+  end
+  if params[:show_list_id]
+    shown = db.get_first_row('SELECT * FROM lists WHERE id = ? AND user_id = ? AND state = 1', [params[:show_list_id].to_i, current_user['id']])
+    if shown
+      @shown_list = shown
+      @shown_items = db.execute('SELECT * FROM grocerylist WHERE list_id = ?', [shown['id']])
+    end
+  end
+  slim(:grocerylist)
 end
 
 get('/grocerylist/:list_id') do
@@ -133,9 +137,14 @@ post('/list/new') do
   name = params['list_name']
   name = 'Ny inköpslista' if name.nil? || name.strip.empty?
   db = SQLite3::Database.new('db/grocerylist.db')
-  created_at = Time.now.strftime('%Y-%m-%d')
-  db.execute('INSERT INTO lists (user_id, name, state, created_at) VALUES (?, ?, 0, ?)', [current_user['id'], name, created_at])
-  redirect('/grocerylist?message=created')
+  active = db.get_first_row('SELECT id FROM lists WHERE user_id = ? AND state = 0', [current_user['id']])
+  if active
+    redirect('/grocerylist?message=already_active')
+  else
+    created_at = Time.now.strftime('%Y-%m-%d')
+    db.execute('INSERT INTO lists (user_id, name, state, created_at) VALUES (?, ?, 0, ?)', [current_user['id'], name, created_at])
+    redirect('/grocerylist?message=created')
+  end
 end
 
 post('/list/done') do
@@ -147,6 +156,8 @@ post('/list/done') do
 end
 
 post('/grocerylist') do
+  list = current_list
+  return redirect('/grocerylist?message=no_list') unless list
     new_grocery = params['new_grocery']
     description = params[:description]
     store = params[:store]
@@ -181,6 +192,14 @@ post('/grocerylist/:id/delete') do
     redirect('/grocerylist')
 end
 
+post('/list/:id/delete') do
+  id = params[:id].to_i
+  db = SQLite3::Database.new('db/grocerylist.db')
+  db.execute('DELETE FROM grocerylist WHERE list_id = ?', [id])
+  db.execute('DELETE FROM lists WHERE id = ? AND user_id = ?', [id, current_user['id']])
+  redirect('/grocerylist')
+end
+
 post('/grocerylist/:id/done') do
     id = params[:id].to_i
     db = SQLite3::Database.new("db/grocerylist.db")
@@ -196,4 +215,16 @@ post('/grocerylist/:id/undone') do
       list = current_list
       db.execute("UPDATE grocerylist SET state = 0 WHERE id = ? AND list_id = ?", [id, list['id']])
     redirect('/grocerylist')
+end
+
+post('/list/:id/undone') do
+  id = params[:id].to_i
+  db = SQLite3::Database.new('db/grocerylist.db')
+  active = db.get_first_row('SELECT id FROM lists WHERE user_id = ? AND state = 0', [current_user['id']])
+  if active
+    redirect('/grocerylist?message=already_active')
+  else
+    db.execute('UPDATE lists SET state = 0 WHERE id = ? AND user_id = ?', [id, current_user['id']])
+    redirect('/grocerylist?message=undone')
+  end
 end
