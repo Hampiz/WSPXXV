@@ -1,24 +1,23 @@
-h2 Skapa Inköpslista
+h2 Skapa ny Inköpslista
 - if params[:message] == 'created'
-  p style="color: green;" Ny lista skapad.
+  p style="color: green;" Ny lista skapad
 - elsif params[:message] == 'done'
-  p style="color: green;" Den aktiva listan markerades som klar.
+  p style="color: green;" Listan markerades som klar
 - elsif params[:message] == 'already_active'
-  p style="color: red;" Du har redan en aktiv lista. Markera den som klar innan du skapar en ny.
+  p style="color: red;" Du har redan en aktiv lista. Markera den som klar innan du skapar en ny
 - elsif params[:message] == 'undone'
-  p style="color: green;" Listan markerades som ej klar.
+  p style="color: green;" Listan markerades som ej klar
 - elsif params[:message] == 'no_list'
-  p style="color: red;" Du måste skapa en lista först.
+  p style="color: red;" Du måste skapa en lista först
 
 - unless @current_list && @current_list['state'].to_i == 1
   form action="/list/new" method="post" class="add-form"
     input type="text" name="list_name" placeholder="Namn"
     button type="submit" Skapa ny lista
 
+- if @current_list
   br
-
-  h3 Lägg till en vara i din inköpslista
-
+  h3 Lägg till varor i din inköpslista
   form action="/grocerylist" method="post" class="add-form"
     input type="text" name="new_grocery" placeholder="Ny vara"
     input type="text" name="description" placeholder="Beskrivning"
@@ -27,64 +26,65 @@ h2 Skapa Inköpslista
 
   br
 
-h3 #{@current_list ? @current_list['name'] : 'Ny lista'}
-hr
+  h3= @current_list['name']
+  hr
 
-table
-  thead
-    tr
-      th Namn |
-      th Beskrivning |
-      th Butik |
-      th Tillagd |
-      th Status |
-      - unless @current_list && @current_list['state'].to_i == 1
-        th Åtgärder
-  tbody
-    - if @grocerylist && !@grocerylist.empty?
-      - @grocerylist.each do |item|
-        - if params[:edit_id] && params[:edit_id].to_i == item['id']
-          tr
-            td colspan="5"
-              form action="/grocerylist/#{item['id']}/update" method="post"
-                input type="text" name="name" value=item['name']
-                input type="text" name="description" value=item['description']
-                input type="text" name="store" value=item['store']
-                button type="submit" Spara
-                button type="button" onclick="location.href='/grocerylist'" style="margin-left:8px;" Avbryt
-        - else
-          tr
-            td= item['name']
-            td= item['description']
-            td= item['store']
-            td= item['created_at']
-            - if item['state'] && item['state'].to_i == 1
-              td Klar
-            - else
-              td Ej klar
-            - unless @current_list && @current_list['state'].to_i == 1
-              td
-                form method="post" action="/grocerylist/#{item['id']}/delete" style="display:inline;"
-                  button type="submit" Ta bort
-                - if item['state'] && item['state'].to_i == 1
-                  form method="post" action="/grocerylist/#{item['id']}/undone" style="display:inline; margin-left:6px;"
-                    button type="submit" Ångra
-                - else
-                  form method="post" action="/grocerylist/#{item['id']}/done" style="display:inline; margin-left:6px;"
-                    button type="submit" Klar
-                form action="/grocerylist" method="get" style="display:inline"
-                  input type="hidden" name="edit_id" value=item['id']
-                  button type="submit" Ändra
-    - else
+  table
+    thead
       tr
-        td colspan="6" Inga varor i listan.
+        th Namn |
+        th Beskrivning |
+        th Butik |
+        th Tillagd |
+        th Status |
+        - unless @current_list['state'].to_i == 1
+          th Åtgärder
+    tbody
+      - if @grocerylist && !@grocerylist.empty?
+        - @grocerylist.each do |item|
+          - if params[:edit_id] && params[:edit_id].to_i == item['id']
+            tr
+              td colspan="5"
+                form action="/grocerylist/#{item['id']}/update" method="post"
+                  input type="text" name="name" value=item['name']
+                  input type="text" name="description" value=item['description']
+                  input type="text" name="store" value=item['store']
+                  button type="submit" Spara
+                  button type="button" onclick="location.href='/grocerylist'" style="margin-left:8px;" Avbryt
+          - else
+            tr
+              td= item['name']
+              td= item['description']
+              td= item['store']
+              td= item['created_at']
+              - if item['state'] && item['state'].to_i == 1
+                td Klar
+              - else
+                td Ej klar
+              - unless @current_list['state'].to_i == 1
+                td
+                  form method="post" action="/grocerylist/#{item['id']}/delete" style="display:inline;"
+                    button type="submit" Ta bort
+                  - if item['state'] && item['state'].to_i == 1
+                    form method="post" action="/grocerylist/#{item['id']}/undone" style="display:inline; margin-left:6px;"
+                      button type="submit" Ångra
+                  - else
+                    form method="post" action="/grocerylist/#{item['id']}/done" style="display:inline; margin-left:6px;"
+                      button type="submit" Klar
+                  form action="/grocerylist" method="get" style="display:inline"
+                    input type="hidden" name="edit_id" value=item['id']
+                    button type="submit" Ändra
+      - else
+        tr
+          td colspan="6" Inga varor i listan.
 
-- unless @current_list && @current_list['state'].to_i == 1
-  form action="/list/done" method="post" style="margin-top: 16px;"
-    button type="submit" Markera lista som klar
-- else
-  form action="/grocerylist" method="get" style="margin-top: 16px;"
-    button type="submit" Tillbaka till aktiv lista
+  - unless @current_list['state'].to_i == 1
+    form action="/list/done" method="post" style="margin-top: 16px;"
+      button type="submit" Markera lista som klar
+  - else
+    form action="/grocerylist" method="get" style="margin-top: 16px;"
+      button type="submit" Tillbaka till aktiv lista
+
 hr
 br
 h3 Klara listor
@@ -123,5 +123,7 @@ hr
           button type="submit" Visa innehåll
       form method="post" action="/list/#{done_list['id']}/delete" style="display:inline; margin-left:6px;"
         button type="submit" Ta bort
+      form method="post" action="/list/#{done_list['id']}/undone" style="display:inline; margin-left:6px;"
+        button type="submit" Avmarkera klar
 - else
   p Inga klara listor än.
