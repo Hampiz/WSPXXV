@@ -14,6 +14,8 @@ h2 Skapa ny Inköpslista
   form action="/list/new" method="post" class="add-form"
     input type="text" name="list_name" placeholder="Namn"
     button type="submit" Skapa ny lista
+  br
+  hr
 
 - if @current_list
   br
@@ -25,7 +27,8 @@ h2 Skapa ny Inköpslista
     button type="submit" Lägg till
 
   br
-
+  hr
+  br
   h3= @current_list['name']
   hr
 
@@ -67,7 +70,7 @@ h2 Skapa ny Inköpslista
                     button type="submit" Ta bort
                   - if item['state'] && item['state'].to_i == 1
                     form method="post" action="/grocerylist/#{item['id']}/undone" style="display:inline; margin-left:6px;"
-                      button type="submit" Ångra
+                      button type="submit" Ej klar
                   - else
                     form method="post" action="/grocerylist/#{item['id']}/done" style="display:inline; margin-left:6px;"
                       button type="submit" Klar
@@ -84,7 +87,7 @@ h2 Skapa ny Inköpslista
   - else
     form action="/grocerylist" method="get" style="margin-top: 16px;"
       button type="submit" Tillbaka till aktiv lista
-
+br
 hr
 br
 h3 Klara listor
@@ -92,7 +95,7 @@ hr
 - if @done_lists && !@done_lists.empty?
   - @done_lists.each do |done_list|
     div.list-done
-      h4= done_list['name']
+      h4 = done_list['name']
       p Skapad: #{done_list['created_at']}
       - if @shown_list && @shown_list['id'] == done_list['id']
         form action="/grocerylist" method="get" style="display:inline"
@@ -100,11 +103,11 @@ hr
         table style="margin-top: 8px;"
           thead
             tr
-              th Namn
-              th Beskrivning
-              th Butik
-              th Tillagd
-              th Status
+              th Namn |
+              th Beskrivning |
+              th Butik |
+              th Tillagd |
+              th Status |
           tbody
             - if @shown_items && !@shown_items.empty?
               - @shown_items.each do |item|
@@ -126,4 +129,4 @@ hr
       form method="post" action="/list/#{done_list['id']}/undone" style="display:inline; margin-left:6px;"
         button type="submit" Avmarkera klar
 - else
-  p Inga klara listor än.
+  p Inga klara listor än. När du markerar en lista som klar kommer den att visas här.
