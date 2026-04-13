@@ -1,15 +1,20 @@
 h2 Skapa ny Inköpslista
+
+/ Display feedback messages based on the 'message' query parameter
 - if params[:message] == 'created'
   p style="color: green;" Ny lista skapad
 - elsif params[:message] == 'done'
   p style="color: green;" Listan markerades som klar
 - elsif params[:message] == 'already_active'
+  / Shown when user tries to create a new list while one is already active
   p style="color: red;" Du har redan en aktiv lista. Markera den som klar innan du skapar en ny
 - elsif params[:message] == 'undone'
   p style="color: green;" Listan markerades som ej klar
 - elsif params[:message] == 'no_list'
+  / Shown when user tries to add an item without having created a list first
   p style="color: red;" Du måste skapa en lista först
 
+/ Only show the "create new list" form if there is no active list (state != 1)
 - unless @current_list && @current_list['state'].to_i == 1
   form action="/list/new" method="post" class="add-form"
     input type="text" name="list_name" placeholder="Namn"
@@ -17,9 +22,11 @@ h2 Skapa ny Inköpslista
   br
   hr
 
+/ Only show the grocery section if an active list exists
 - if @current_list
   br
   h3 Lägg till varor i din inköpslista
+  / Form to add a new grocery item to the current active list
   form action="/grocerylist" method="post" class="add-form"
     input type="text" name="new_grocery" placeholder="Ny vara"
     input type="text" name="description" placeholder="Beskrivning"
@@ -29,77 +36,97 @@ h2 Skapa ny Inköpslista
   br
   hr
   br
+  / Display the name of the current active list as a heading
   h3= @current_list['name']
   hr
 
   table
     thead
       tr
+        / Column headers for the grocery list table
         th Namn |
         th Beskrivning |
         th Butik |
         th Tillagd |
         th Status |
+        / Only show the "Åtgärder" (actions) column if the list is not marked as done
         - unless @current_list['state'].to_i == 1
           th Åtgärder
     tbody
+      / Check if the grocery list has any items
       - if @grocerylist && !@grocerylist.empty?
         - @grocerylist.each do |item|
+          / If this item's ID matches the edit_id param, show the inline edit form instead
           - if params[:edit_id] && params[:edit_id].to_i == item['id']
             tr
+              / Edit form spans all 5 columns
               td colspan="5"
                 form action="/grocerylist/#{item['id']}/update" method="post"
+                  / Pre-fill inputs with the item's current values
                   input type="text" name="name" value=item['name']
                   input type="text" name="description" value=item['description']
                   input type="text" name="store" value=item['store']
                   button type="submit" Spara
+                  / Cancel button redirects back to the list without saving
                   button type="button" onclick="location.href='/grocerylist'" style="margin-left:8px;" Avbryt
           - else
+            / Normal read-only row for each grocery item
             tr
               td= item['name']
               td= item['description']
               td= item['store']
               td= item['created_at']
+              / Show "Klar" or "Ej klar" depending on the item's state
               - if item['state'] && item['state'].to_i == 1
                 td Klar
               - else
                 td Ej klar
+              / Only show action buttons if the list is still active (not done)
               - unless @current_list['state'].to_i == 1
                 td
+                  / Delete button — removes the item from the list
                   form method="post" action="/grocerylist/#{item['id']}/delete" style="display:inline;"
                     button type="submit" Ta bort
+                  / Toggle done/undone — shows the opposite action of current state
                   - if item['state'] && item['state'].to_i == 1
                     form method="post" action="/grocerylist/#{item['id']}/undone" style="display:inline; margin-left:6px;"
                       button type="submit" Ej klar
                   - else
                     form method="post" action="/grocerylist/#{item['id']}/done" style="display:inline; margin-left:6px;"
                       button type="submit" Klar
+                  / Edit button — passes the item's ID as edit_id to trigger the inline edit form
                   form action="/grocerylist" method="get" style="display:inline"
                     input type="hidden" name="edit_id" value=item['id']
                     button type="submit" Ändra
       - else
+        / Shown when the list exists but has no items yet
         tr
           td colspan="6" Inga varor i listan.
 
+  / If the list is still active, show the button to mark the whole list as done
   - unless @current_list['state'].to_i == 1
     form action="/list/done" method="post" style="margin-top: 16px;"
       button type="submit" Markera lista som klar
-  - else
-    form action="/grocerylist" method="get" style="margin-top: 16px;"
-      button type="submit" Tillbaka till aktiv lista
+
 br
 hr
 br
+
+/ Section for displaying all completed lists
 h3 Klara listor
 hr
 - if @done_lists && !@done_lists.empty?
+  / Loop through each completed list
   - @done_lists.each do |done_list|
     div.list-done
       h4 = done_list['name']
       p Skapad: #{done_list['created_at']}
+      / If this list is the one currently being shown, render its contents
       - if @shown_list && @shown_list['id'] == done_list['id']
+        / Button to collapse/hide the list contents
         form action="/grocerylist" method="get" style="display:inline"
           button type="submit" Dölj innehåll
+        / Table showing the items inside the expanded completed list
         table style="margin-top: 8px;"
           thead
             tr
@@ -116,17 +143,22 @@ hr
                   td= item['description']
                   td= item['store']
                   td= item['created_at']
+                  / Inline ternary — display "Klar" or "Ej klar" based on item state
                   td= item['state'].to_i == 1 ? 'Klar' : 'Ej klar'
             - else
               tr
                 td colspan="5" Inga varor i listan.
       - else
+        / Button to expand and show the contents of this completed list
         form action="/grocerylist" method="get" style="display:inline"
           input type="hidden" name="show_list_id" value=done_list['id']
           button type="submit" Visa innehåll
+      / Delete the entire completed list and all its items
       form method="post" action="/list/#{done_list['id']}/delete" style="display:inline; margin-left:6px;"
         button type="submit" Ta bort
+      / Move the completed list back to active status
       form method="post" action="/list/#{done_list['id']}/undone" style="display:inline; margin-left:6px;"
         button type="submit" Avmarkera klar
 - else
+  / Shown when no completed lists exist yet
   p Inga klara listor än. När du markerar en lista som klar kommer den att visas här.

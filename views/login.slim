@@ -1,7 +1,12 @@
 h3 Logga in 
+/ Display error message in red if login failed (wrong username or password)
 - if @error
   p style="color: red;" = @error
+/ Login form — submits username and password via POST to /login
 form action="/login" method="post" 
+    / Text input for the username
     input type="text" name="username" placeholder="Användarnamn"
+    / Password input — characters are hidden as the user types
     input type="password" name="pwd" placeholder="Lösenord"
+    / Submit button to send the form
     input type="submit" value="Logga in"

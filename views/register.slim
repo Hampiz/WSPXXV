@@ -1,8 +1,14 @@
 h3 Registrera nytt konto
+/ Display error message in red if registration failed (username taken or passwords don't match)
 - if @error
   p style="color: red;" = @error
+/ Registration form — submits user details via POST to /register
 form action="/register" method="post"
+    / Text input for choosing a username
     input type="text" name="username" placeholder="Användarnamn"
+    / Password input for the desired password
     input type="password" name="pwd" placeholder="Lösenord"
+    / Confirmation input — must match the password field to register successfully
     input type="password" name="pwd_confirm" placeholder="Bekräfta lösenord"
+    / Submit button to send the registration form
     input type="submit" value="Registrera"
